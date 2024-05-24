@@ -2,6 +2,8 @@ from tkinter import *
 from tkinter import messagebox
 from random import randint, choice, shuffle
 import pyperclip
+import json
+from json.decoder import JSONDecodeError
 
 # PASSWORD GENERATOR
 def generate_password():
@@ -31,20 +33,28 @@ def save():
     username = username_entry.get()
     password = password_entry.get()
 
+    new_data = {website: {
+        "email/username": username,
+        "password": password
+    }}
+
     if not website or not username or not password:
         messagebox.showinfo(title="Erro", message="Não pode haver campos vazios")
     else:
-        is_ok = messagebox.askokcancel(title=website, message=f"Esses são os dados detalhados: \n"
-                                                              f"Email: {username} \n"
-                                                              f"Password: {password}\n"
-                                                              f"salvar?")
-        if is_ok:
-            with open("data.txt", "a") as file:
-                file.write(f"site: {website} | email/Nome de usuario: {username}"
-                           f" | Senha: {password} \n")
+        try:
+            with open("data.json", "r") as file:
+                data = json.load(file)
 
-    website_entry.delete(0, END)
-    password_entry.delete(0, END)
+        except FileNotFoundError or JSONDecodeError:
+            with open("data.json", "w") as file:
+                json.dump(new_data, file, indent=4)
+        else:
+            data.update(new_data)
+            with open("data.json", "w") as file:
+                json.dump(data, file, indent=4)
+        finally:
+            website_entry.delete(0, END)
+            password_entry.delete(0, END)
 
 
 # UI SETUP
